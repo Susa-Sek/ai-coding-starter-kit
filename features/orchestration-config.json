@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "maxHours": 8,
+  "maxRetries": 3,
+  "retryDelaySeconds": 60,
+  "pauseOnErrors": false,
+  "continueOnFailure": true,
+  "skipAfterRetries": true,
+  "phaseTimeoutMinutes": 60,
+  "phases": [
+    "requirements",
+    "architecture",
+    "frontend",
+    "backend",
+    "qa",
+    "deploy"
+  ],
+  "skipPhases": {
+    "backend": "whenNotNeeded"
+  },
+  "notifications": {
+    "onError": true,
+    "onCompletion": true
+  }
+}

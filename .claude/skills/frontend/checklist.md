@@ -15,6 +15,32 @@ Before marking frontend as complete:
 - [ ] Design preferences clarified with user (if no mockups)
 - [ ] Component architecture from Solution Architect followed
 
+## Creative Mode (if Creative/Premium/Experimental)
+- [ ] Style mode selected (Standard/Creative/Premium/Experimental)
+- [ ] Inspiration sources checked (godly.website, awwwards.com, etc.)
+- [ ] Appropriate patterns from patterns.md applied
+- [ ] Dependencies installed for selected mode:
+  - Creative: framer-motion, lenis
+  - Premium: + three, @react-three/fiber, @react-three/drei
+
+### Animation Checklist (Creative+)
+- [ ] Scroll animations implemented where appropriate
+- [ ] Hover effects enhance interactivity
+- [ ] Page transitions smooth (if multi-page)
+- [ ] Animation performance acceptable (60fps)
+
+### 3D Checklist (Premium+)
+- [ ] 3D scene initializes without errors
+- [ ] Interactive elements respond to mouse
+- [ ] Performance acceptable (monitor FPS)
+- [ ] Fallback for low-performance devices
+
+### Micro-Interactions Checklist (Creative+)
+- [ ] Custom cursor (if implemented) works correctly
+- [ ] Smooth scroll enabled and functional
+- [ ] Magnetic effects work as expected
+- [ ] All interactions are optional (don't break UX)
+
 ## Implementation
 - [ ] All planned components implemented
 - [ ] All components use Tailwind CSS (no inline styles, no CSS modules)
