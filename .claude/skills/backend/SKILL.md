@@ -56,9 +56,41 @@ Use `AskUserQuestion` for:
 - What specific input validations are required?
 
 ### 3. Create Database Schema
+
+**Option A: Supabase Dashboard (Interactive)**
 - Write SQL for new tables in Supabase SQL Editor
 - Enable Row Level Security on EVERY table
 - Create RLS policies for all CRUD operations
+
+**Option B: Supabase CLI (Recommended for migrations)**
+```bash
+# Check if Supabase CLI is installed
+supabase --version
+
+# If not installed
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link to your project (get project ref from dashboard URL)
+supabase link --project-ref <project-ref>
+
+# Create a new migration
+supabase migration new add_tasks_table
+
+# Edit the generated file in supabase/migrations/
+# Then apply:
+supabase db push
+
+# Reset database (development only!)
+supabase db reset
+
+# Generate types for TypeScript
+supabase gen types typescript --local > src/lib/database-types.ts
+```
+
+**For all options:**
 - Add indexes on performance-critical columns (WHERE, ORDER BY, JOIN)
 - Use foreign keys with ON DELETE CASCADE where appropriate
 
@@ -73,6 +105,46 @@ Use `AskUserQuestion` for:
 - Update frontend components to use real API endpoints
 - Replace any mock data or localStorage with API calls
 - Handle loading and error states
+
+### 5.5. Test APIs with Playwright
+**Use `browser_run_code` to test APIs without confirmation prompts:**
+
+```javascript
+async (page) => {
+  const results = [];
+
+  // Test API endpoint
+  page.on('response', async response => {
+    if (response.url().includes('/api/')) {
+      results.push({
+        url: response.url(),
+        status: response.status(),
+        ok: response.ok()
+      });
+    }
+  });
+
+  // Trigger API calls by interacting with the UI
+  await page.goto('http://localhost:3000');
+  await page.getByRole('button', { name: 'Submit' }).click();
+  await page.waitForTimeout(1000);
+
+  return { apiCalls: results };
+}
+```
+
+### 5.6. Look Up Supabase Docs with Context7
+**Use Context7 for up-to-date Supabase documentation:**
+
+```
+1. Resolve library: mcp__plugin_context7_context7__resolve-library-id
+   - libraryName: "supabase"
+   - query: "row level security policy"
+
+2. Query docs: mcp__plugin_context7_context7__query-docs
+   - libraryId: "/supabase/supabase"
+   - query: "RLS policy examples for user data"
+```
 
 ### 6. User Review
 - Walk user through the API endpoints created
@@ -105,6 +177,44 @@ CREATE POLICY "Users see own tasks" ON tasks
 
 CREATE INDEX idx_tasks_user_id ON tasks(user_id);
 CREATE INDEX idx_tasks_status ON tasks(status);
+```
+
+### Supabase Migration Template
+When creating migrations via CLI, use this template:
+```sql
+-- supabase/migrations/YYYYMMDDHHMMSS_add_xxx_table.sql
+
+CREATE TABLE your_table (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE your_table ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Users can view own records"
+  ON your_table FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own records"
+  ON your_table FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own records"
+  ON your_table FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own records"
+  ON your_table FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Indexes
+CREATE INDEX idx_your_table_user_id ON your_table(user_id);
+CREATE INDEX idx_your_table_created_at ON your_table(created_at DESC);
 ```
 
 ## Production References

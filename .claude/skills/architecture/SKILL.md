@@ -86,10 +86,66 @@ Each task has:
 Stored in: Browser localStorage (no server needed)
 ```
 
-#### C) Tech Decisions (justified for PM)
+#### C) Architecture Diagrams (Mermaid)
+
+**System Overview:**
+```mermaid
+graph TD
+    A[User Browser] --> B[Next.js App]
+    B --> C[API Routes]
+    C --> D[Supabase]
+    D --> E[(PostgreSQL)]
+    D --> F[Auth Service]
+```
+
+**Data Model (ER Diagram):**
+```mermaid
+erDiagram
+    User ||--o{ Task : creates
+    User {
+        uuid id PK
+        string email
+        timestamp created_at
+    }
+    Task {
+        uuid id PK
+        uuid user_id FK
+        string title
+        string status
+        timestamp created_at
+    }
+```
+
+**API Flow (Sequence Diagram):**
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as API
+    participant D as Database
+
+    U->>F: Create Task
+    F->>A: POST /api/tasks
+    A->>D: INSERT task
+    D-->>A: Task created
+    A-->>F: Success response
+    F-->>U: Show new task
+```
+
+**State Flow (if complex):**
+```mermaid
+stateDiagram-v2
+    [*] --> Empty
+    Empty --> HasItems: Add first item
+    HasItems --> HasItems: Add more items
+    HasItems --> HasItems: Complete item
+    HasItems --> Empty: Delete all
+```
+
+#### D) Tech Decisions (justified for PM)
 Explain WHY specific tools/approaches are chosen in plain language.
 
-#### D) Dependencies (packages to install)
+#### E) Dependencies (packages to install)
 List only package names with brief purpose.
 
 ### 4. Add Design to Feature Spec
@@ -129,6 +185,7 @@ Backend needed: yes/no
 - [ ] Feature spec read and understood
 - [ ] Component structure documented (visual tree, PM-readable)
 - [ ] Data model described (plain language, no code)
+- [ ] Mermaid diagrams added (system overview, data model, API flow)
 - [ ] Backend need clarified (localStorage vs database)
 - [ ] Tech decisions justified (WHY, not HOW)
 - [ ] Dependencies listed

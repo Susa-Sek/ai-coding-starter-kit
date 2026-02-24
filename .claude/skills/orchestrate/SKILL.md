@@ -323,6 +323,72 @@ ON phase error:
 - **Configuration:** Missing files, invalid specs → Skip feature, log error
 - **Fatal:** Unfixable code errors → Pause for user intervention
 
+## Notification System (Optional)
+
+The orchestrator can send notifications at key events. Configure in `orchestration-config.json`:
+
+```json
+{
+  "notifications": {
+    "onComplete": {
+      "webhook": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+      "email": "dev-team@example.com"
+    },
+    "onError": {
+      "webhook": "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+      "includeDetails": true
+    },
+    "onFeatureComplete": {
+      "webhook": null
+    }
+  }
+}
+```
+
+### Notification Events
+| Event | When | Template |
+|-------|------|----------|
+| `onComplete` | Session ends successfully | "Orchestration complete: X features deployed" |
+| `onError` | Critical error pauses session | "Orchestration paused: Error in PROJ-X" |
+| `onFeatureComplete` | Each feature deployed | "PROJ-X deployed to production" |
+| `onTimeLimit` | Time limit reached | "Orchestration paused: Time limit reached" |
+
+### Slack Webhook Format
+```json
+{
+  "text": "Orchestration Report",
+  "blocks": [
+    {
+      "type": "header",
+      "text": { "type": "plain_text", "text": "✅ Orchestration Complete" }
+    },
+    {
+      "type": "section",
+      "fields": [
+        { "type": "mrkdwn", "text": "*Features:*\n3 processed, 2 deployed" },
+        { "type": "mrkdwn", "text": "*Duration:*\n4h 32m" }
+      ]
+    }
+  ]
+}
+```
+
+### Implementation
+If notifications are configured, send HTTP POST to webhook URL at session end:
+```javascript
+// After generating morning report
+if (config.notifications?.onComplete?.webhook) {
+  await fetch(config.notifications.onComplete.webhook, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text: `Orchestration ${status}: ${completedFeatures.length} features processed`,
+      reportPath: 'features/orchestration-report.md'
+    })
+  });
+}
+```
+
 ## Status File Operations
 
 ### Reading Status

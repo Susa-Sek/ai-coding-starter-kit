@@ -38,6 +38,21 @@ If this file exists, you are running in **Programmatic Mode**:
 3. Verify no Critical/High bugs exist in QA results
 4. If QA has not been done, tell the user: "Run `/qa` first before deploying."
 
+## Vercel Skills Reference
+
+The following Vercel skills are available and should be used:
+
+| Skill | Purpose | Command |
+|-------|---------|---------|
+| `vercel:setup` | Configure Vercel CLI and project | `/vercel:setup` |
+| `vercel:deploy` | Deploy to Vercel | `/vercel:deploy` |
+| `vercel:logs` | View deployment logs | `/vercel:logs` |
+
+**When to use:**
+- First deployment: Use `/vercel:setup` to configure CLI
+- Standard deployment: Use `/vercel:deploy` instead of manual `npx vercel --prod`
+- Debugging: Use `/vercel:logs` to check deployment issues
+
 ## Workflow
 
 ### 1. Pre-Deployment Checks
