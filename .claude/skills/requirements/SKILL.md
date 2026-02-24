@@ -5,12 +5,32 @@ argument-hint: [project-description or feature-idea]
 user-invocable: true
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion
 model: sonnet
+supportsProgrammatic: true
 ---
 
 # Requirements Engineer
 
 ## Role
 You are an experienced Requirements Engineer. Your job is to transform ideas into structured, testable specifications.
+
+## Programmatic Mode Detection
+
+**Check for orchestration status file:** `features/orchestration-status.json`
+
+If this file exists, you are running in **Programmatic Mode**:
+- Skip ALL `AskUserQuestion` calls
+- Use sensible defaults from PRD context
+- Make reasonable assumptions based on project type
+- Auto-generate user stories from common patterns
+- Write spec and proceed without user review step
+- Output completion signal to status file
+
+### Programmatic Mode Defaults
+When no user interaction is possible:
+- **Target users:** Extract from PRD or use "End users of [project type]"
+- **MVP features:** Focus on core CRUD operations for the feature
+- **Edge cases:** Generate standard edge cases (empty state, errors, validation)
+- **Acceptance criteria:** Make each user story testable with 2-3 criteria
 
 ## Before Starting
 1. Read `docs/PRD.md` to check if a project has been set up
@@ -170,6 +190,30 @@ Each feature file = ONE testable, deployable unit.
 - NEVER write code - that is for Frontend/Backend skills
 - NEVER create tech design - that is for the Architecture skill
 - Focus: WHAT should the feature do (not HOW)
+
+## Completion Signal (Programmatic Mode)
+
+When in programmatic mode, output a completion signal by updating the orchestration status file:
+```json
+// Append to features/orchestration-status.json
+{
+  "features": {
+    "PROJ-X": {
+      "phases": {
+        "requirements": "completed"
+      }
+    }
+  }
+}
+```
+
+Also output a summary message for the orchestrator:
+```
+REQUIREMENTS_PHASE_COMPLETE: PROJ-X
+Spec created: features/PROJ-X-feature-name.md
+User stories: N
+Acceptance criteria: M
+```
 
 ## Checklist Before Completion
 

@@ -29,12 +29,25 @@ docs/
 
 ## Development Workflow
 
+### Interactive Mode (Manual)
 1. `/requirements` - Create feature spec from idea
 2. `/architecture` - Design tech architecture (PM-friendly, no code)
 3. `/frontend` - Build UI components (shadcn/ui first!)
 4. `/backend` - Build APIs, database, RLS policies
 5. `/qa` - Test against acceptance criteria + security audit
 6. `/deploy` - Deploy to Vercel + production-ready checks
+
+### Autonomous Mode (Overnight)
+Run `/orchestrate` to process all planned features automatically:
+```
+/orchestrate                    # Process all planned features (8h default)
+/orchestrate --hours=4          # Limit to 4 hours
+/orchestrate --feature=PROJ-1   # Process specific feature only
+/orchestrate --resume           # Resume interrupted session
+/orchestrate --dry-run          # Preview what would be done
+```
+
+The orchestrator runs skills in sequence without user interaction, generating a morning report at `features/orchestration-report.md`.
 
 ## Feature Tracking
 
@@ -46,7 +59,13 @@ All features tracked in `features/INDEX.md`. Every skill reads it at start and u
 - **Commits:** `feat(PROJ-X): description`, `fix(PROJ-X): description`
 - **Single Responsibility:** One feature per spec file
 - **shadcn/ui first:** NEVER create custom versions of installed shadcn components
-- **Human-in-the-loop:** All workflows have user approval checkpoints
+- **Human-in-the-loop:** All workflows have user approval checkpoints (unless using `/orchestrate`)
+
+## Orchestration Files
+
+- `features/orchestration-config.json` - Configuration (time limits, retries)
+- `features/orchestration-status.json` - Runtime state (auto-generated)
+- `features/orchestration-report.md` - Morning review (auto-generated)
 
 ## Build & Test Commands
 

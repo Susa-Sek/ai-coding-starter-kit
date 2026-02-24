@@ -59,7 +59,36 @@ When this skill runs, it operates **completely autonomously**:
   "completedFeatures": [],
   "skippedFeatures": [],
   "pendingFeatures": ["PROJ-1", "PROJ-2", ...],
-  "phaseTimeouts": {}
+  "phaseTimeouts": {},
+  "bugFixAttempts": {}
+}
+```
+
+### Bug Fix Tracking Schema
+```json
+{
+  "bugFixAttempts": {
+    "PROJ-X": {
+      "totalAttempts": 2,
+      "attempts": [
+        {
+          "round": 1,
+          "bugsFound": 5,
+          "bugsFixed": 5,
+          "fixSkill": "frontend",
+          "timestamp": "ISO8601"
+        },
+        {
+          "round": 2,
+          "bugsFound": 2,
+          "bugsFixed": 2,
+          "fixSkill": "backend",
+          "timestamp": "ISO8601"
+        }
+      ],
+      "finalResult": "passed"
+    }
+  }
 }
 ```
 
@@ -154,12 +183,75 @@ Only executed if the feature spec indicates backend is needed:
 Task tool: subagent_type="Backend Developer", prompt="Implement backend for PROJ-X according to spec at features/PROJ-X-feature-name.md"
 ```
 
-### QA Phase
+### QA Phase with Auto-Fix Loop
 Uses Task tool with subagent_type="QA Engineer":
 ```
 Task tool: subagent_type="QA Engineer", prompt="Test PROJ-X against acceptance criteria from features/PROJ-X-feature-name.md"
 ```
-If bugs are found, logs issues and continues (doesn't auto-fix).
+
+**Bug-Fix Loop (CRITICAL):**
+When QA finds bugs, automatically fix and re-test:
+
+```
+SET qaResult = RUN_QA_PHASE()
+SET bugFixAttempts = 0
+
+WHILE qaResult.hasCriticalOrHighBugs AND bugFixAttempts < maxBugFixLoops:
+  LOG "Bugs found, attempting auto-fix (attempt {bugFixAttempts + 1}/{maxBugFixLoops})"
+
+  // Determine which skill to use based on bug types
+  FOR each bug in qaResult.bugs:
+    IF bug.type IN ["UI", "Styling", "Component", "Client-side"]:
+      skill = "frontend"
+    ELSE IF bug.type IN ["API", "Database", "Auth", "Server-side"]:
+      skill = "backend"
+    ELSE:
+      skill = "frontend"  // Default to frontend
+
+  // Run appropriate fix skill
+  IF skill == "frontend":
+    Task tool: subagent_type="Frontend Developer",
+    prompt="Fix bugs for PROJ-X found in QA:
+            Bug details: {qaResult.bugs}
+            Feature spec: features/PROJ-X-feature-name.md"
+  ELSE:
+    Task tool: subagent_type="Backend Developer",
+    prompt="Fix bugs for PROJ-X found in QA:
+            Bug details: {qaResult.bugs}
+            Feature spec: features/PROJ-X-feature-name.md"
+
+  // Commit the fixes
+  git add -A
+  git commit -m "fix(PROJ-X): Auto-fix bugs from QA attempt {bugFixAttempts + 1}"
+
+  // Re-run QA
+  qaResult = RUN_QA_PHASE()
+  bugFixAttempts++
+
+// After loop
+IF qaResult.hasCriticalOrHighBugs:
+  LOG "Bugs persist after {maxBugFixLoops} fix attempts"
+  IF continueOnFailure AND skipAfterRetries:
+    SET feature.status = "skipped"
+    ADD to errors: "QA failed after {maxBugFixLoops} bug-fix attempts"
+    CONTINUE with next feature
+  ELSE:
+    PAUSE for user intervention
+ELSE:
+  LOG "All bugs resolved, proceeding to deploy"
+```
+
+**Bug Type Classification:**
+| Bug Type | Fix Skill |
+|----------|-----------|
+| UI/Styling/Component | frontend |
+| Client-side validation | frontend |
+| Responsive issues | frontend |
+| API/Endpoint errors | backend |
+| Database/SQL errors | backend |
+| Authentication/Auth | backend |
+| RLS policy issues | backend |
+| Server validation | backend |
 
 ### Deploy Phase
 ```
@@ -223,6 +315,7 @@ ON phase error:
 - `continueOnFailure: true` - Continue with next feature instead of stopping on errors
 - `skipAfterRetries: true` - Mark feature as "skipped" and move on after max retries
 - `phaseTimeoutMinutes: 60` - Timeout per phase in minutes (0 = disabled)
+- `maxBugFixLoops: 3` - Maximum QA → Fix → QA cycles before giving up
 - `pauseOnErrors: false` - Changed default: don't pause on errors
 
 ### Error Categories
@@ -290,6 +383,17 @@ At session end (completion, time limit, or error pause), generate `features/orch
 - **Error:** Build error - missing dependency
 - **Retry Attempts:** 3/3
 - **Resolution:** Max retries exceeded, continued with next feature
+
+## Bug Fix Attempts
+
+### PROJ-4: Feature Name
+- **QA Rounds:** 3
+- **Bugs Fixed:** 5 (2 frontend, 3 backend)
+- **Final Status:** Passed ✓
+- **Details:**
+  - Round 1: 5 bugs found → 3 frontend fixes, 2 backend fixes
+  - Round 2: 2 bugs found → 2 frontend fixes
+  - Round 3: 0 bugs → Passed
 
 ## Errors
 

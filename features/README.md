@@ -2,6 +2,15 @@
 
 Dieser Ordner enthält detaillierte Feature Specs vom Requirements Engineer.
 
+## Orchestration Files
+
+| File | Description |
+|------|-------------|
+| `orchestration-config.json` | Configuration for autonomous orchestration (time limits, retries) |
+| `orchestration-status.json` | Runtime state during orchestration (auto-generated) |
+| `orchestration-status.schema.json` | JSON schema for status file structure |
+| `orchestration-report.md` | Morning review generated after orchestration session |
+
 ## Naming Convention
 `PROJ-X-feature-name.md`
 

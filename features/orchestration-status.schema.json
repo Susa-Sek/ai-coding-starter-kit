@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "sessionId": "session-YYYY-MM-DD-XXXXXX",
+  "startedAt": "ISO8601 timestamp",
+  "updatedAt": "ISO8601 timestamp",
+  "timeLimit": "ISO8601 duration (e.g., PT8H)",
+  "currentFeature": "PROJ-X or null",
+  "currentPhase": "requirements|architecture|frontend|backend|qa|deploy|completed|paused",
+  "features": {
+    "PROJ-1": {
+      "name": "Feature Name",
+      "status": "planned|in_progress|in_review|deployed|failed",
+      "phases": {
+        "requirements": "pending|in_progress|completed|failed|skipped",
+        "architecture": "pending|in_progress|completed|failed|skipped",
+        "frontend": "pending|in_progress|completed|failed|skipped",
+        "backend": "pending|in_progress|completed|failed|skipped",
+        "qa": "pending|in_progress|completed|failed|skipped",
+        "deploy": "pending|in_progress|completed|failed|skipped"
+      },
+      "startedAt": "ISO8601 timestamp or null",
+      "completedAt": "ISO8601 timestamp or null",
+      "retries": 0,
+      "lastError": "Error message or null",
+      "needsBackend": true
+    }
+  },
+  "errors": [
+    {
+      "timestamp": "ISO8601 timestamp",
+      "feature": "PROJ-X",
+      "phase": "phase name",
+      "message": "Error description",
+      "retryCount": 0,
+      "resolved": false
+    }
+  ],
+  "completedFeatures": ["PROJ-1"],
+  "pendingFeatures": ["PROJ-2", "PROJ-3"]
+}
