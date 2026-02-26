@@ -1,0 +1,64 @@
+{
+  "sessionId": "session-2026-02-26-orchestrate",
+  "startedAt": "2026-02-26T00:00:00.000Z",
+  "updatedAt": "2026-02-26T13:07:00.000Z",
+  "timeLimit": "PT8H",
+  "currentFeature": "PROJ-9",
+  "currentPhase": "deploy",
+  "features": {
+    "PROJ-9": {
+      "status": "in_review",
+      "phases": {
+        "requirements": "completed",
+        "architecture": "completed",
+        "frontend": "completed",
+        "backend": "skipped",
+        "qa": "completed",
+        "e2e": "completed",
+        "deploy": "pending"
+      },
+      "needsBackend": false,
+      "needsE2E": true,
+      "qaResults": {
+        "userStoriesTested": 6,
+        "userStoriesPassed": 6,
+        "acceptanceCriteriaTotal": 18,
+        "acceptanceCriteriaPassed": 18,
+        "edgeCasesTested": 8,
+        "bugs": {
+          "critical": 0,
+          "high": 0,
+          "medium": 0,
+          "low": 0
+        },
+        "responsive": {
+          "mobile": "pass",
+          "tablet": "pass",
+          "desktop": "pass"
+        },
+        "security": {
+          "xss": "pass",
+          "sqlInjection": "n/a",
+          "dataExposure": "pass"
+        },
+        "performance": {
+          "ttfb": "316ms",
+          "fcp": "148ms",
+          "lcp": "120ms",
+          "cls": "0.0000"
+        },
+        "productionReady": true,
+        "totalTests": 62,
+        "passedTests": 62,
+        "failedTests": 0
+      }
+    }
+  },
+  "errors": [],
+  "completedFeatures": [],
+  "skippedFeatures": [],
+  "pendingFeatures": [],
+  "phaseTimeouts": {},
+  "bugFixAttempts": {},
+  "e2eRetryAttempts": {}
+}
