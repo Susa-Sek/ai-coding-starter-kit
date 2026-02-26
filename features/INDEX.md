@@ -12,7 +12,7 @@
 
 | ID | Feature | Status | Spec | Created |
 |----|---------|--------|------|---------|
-| PROJ-9 | E2E User Journey Tests | In Review | PROJ-9-e2e-user-journey-tests.md | 2026-02-26 |
+| PROJ-9 | E2E User Journey Tests | Deployed | PROJ-9-e2e-user-journey-tests.md | 2026-02-26 |
 
 <!-- Add features above this line -->
 
