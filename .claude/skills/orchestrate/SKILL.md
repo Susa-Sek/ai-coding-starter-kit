@@ -60,7 +60,8 @@ When this skill runs, it operates **completely autonomously**:
   "skippedFeatures": [],
   "pendingFeatures": ["PROJ-1", "PROJ-2", ...],
   "phaseTimeouts": {},
-  "bugFixAttempts": {}
+  "bugFixAttempts": {},
+  "e2eRetryAttempts": {}
 }
 ```
 
@@ -92,6 +93,39 @@ When this skill runs, it operates **completely autonomously**:
 }
 ```
 
+### E2E Retry Tracking Schema
+```json
+{
+  "e2eRetryAttempts": {
+    "PROJ-X": {
+      "totalAttempts": 2,
+      "attempts": [
+        {
+          "round": 1,
+          "journeysRun": 6,
+          "stepsPassed": 28,
+          "stepsFailed": 2,
+          "failures": [
+            { "journey": "UJ-1", "step": "UJ-1.3", "type": "UI", "message": "Button not visible" }
+          ],
+          "fixSkill": "frontend",
+          "timestamp": "ISO8601"
+        },
+        {
+          "round": 2,
+          "journeysRun": 6,
+          "stepsPassed": 30,
+          "stepsFailed": 0,
+          "failures": [],
+          "timestamp": "ISO8601"
+        }
+      ],
+      "finalResult": "passed"
+    }
+  }
+}
+```
+
 ## Orchestration Loop
 
 ### Main Loop (for each feature)
@@ -105,11 +139,14 @@ FOR each feature in pendingFeatures:
   SET feature.status = "in_progress"
   UPDATE status file
 
-  FOR each phase in [requirements, architecture, frontend, backend?, qa, deploy]:
+  FOR each phase in [requirements, architecture, frontend, backend?, qa, e2e?, deploy]:
     IF timeRemaining() < minTimeForPhase(phase):
       PAUSE: Write status, exit
 
     IF phase == "backend" AND feature.needsBackend == false:
+      SKIP this phase
+
+    IF phase == "e2e" AND feature.needsE2E == false:
       SKIP this phase
 
     SET currentPhase = phase
@@ -172,21 +209,21 @@ Use Skill tool: skill="architecture", args="features/PROJ-X-feature-name.md"
 ```
 
 ### Frontend Phase
-Uses Task tool with subagent_type="Frontend Developer" to execute in isolated context:
+Use Skill tool for consistent delegation:
 ```
-Task tool: subagent_type="Frontend Developer", prompt="Implement frontend for PROJ-X according to spec at features/PROJ-X-feature-name.md"
+Skill tool: skill="frontend", args="features/PROJ-X-feature-name.md"
 ```
 
 ### Backend Phase (conditional)
 Only executed if the feature spec indicates backend is needed:
 ```
-Task tool: subagent_type="Backend Developer", prompt="Implement backend for PROJ-X according to spec at features/PROJ-X-feature-name.md"
+Skill tool: skill="backend", args="features/PROJ-X-feature-name.md"
 ```
 
 ### QA Phase with Auto-Fix Loop
-Uses Task tool with subagent_type="QA Engineer":
+Use Skill tool for consistent delegation:
 ```
-Task tool: subagent_type="QA Engineer", prompt="Test PROJ-X against acceptance criteria from features/PROJ-X-feature-name.md"
+Skill tool: skill="qa", args="features/PROJ-X-feature-name.md"
 ```
 
 **Bug-Fix Loop (CRITICAL):**
@@ -208,17 +245,13 @@ WHILE qaResult.hasCriticalOrHighBugs AND bugFixAttempts < maxBugFixLoops:
     ELSE:
       skill = "frontend"  // Default to frontend
 
-  // Run appropriate fix skill
+  // Run appropriate fix skill using Skill tool
   IF skill == "frontend":
-    Task tool: subagent_type="Frontend Developer",
-    prompt="Fix bugs for PROJ-X found in QA:
-            Bug details: {qaResult.bugs}
-            Feature spec: features/PROJ-X-feature-name.md"
+    Skill tool: skill="frontend",
+    args="--fix-bugs features/PROJ-X-feature-name.md --bugs='{qaResult.bugs}'"
   ELSE:
-    Task tool: subagent_type="Backend Developer",
-    prompt="Fix bugs for PROJ-X found in QA:
-            Bug details: {qaResult.bugs}
-            Feature spec: features/PROJ-X-feature-name.md"
+    Skill tool: skill="backend",
+    args="--fix-bugs features/PROJ-X-feature-name.md --bugs='{qaResult.bugs}'"
 
   // Commit the fixes
   git add -A
@@ -253,6 +286,91 @@ ELSE:
 | RLS policy issues | backend |
 | Server validation | backend |
 
+### E2E Phase (conditional)
+Only executed if the feature spec indicates E2E testing is needed (or defaults to true for features with UI):
+
+```
+Skill tool: skill="e2e-journey", args="features/PROJ-X-feature-name.md --all --headless"
+```
+
+The e2e-journey skill runs in programmatic mode (detected via `features/orchestration-status.json`):
+- Runs all built-in journeys (UJ-1 through UJ-6) or journeys defined in `tests/journeys/data/uj-steps.ts`
+- Captures screenshots automatically to `test-results/`
+- Logs console errors and network issues
+- Generates comprehensive report at `test-results/e2e-report.md`
+
+**E2E Failure Handling:**
+When E2E tests fail:
+
+```
+SET e2eResult = RUN_E2E_PHASE()
+SET e2eRetryAttempts = 0
+
+WHILE e2eResult.hasFailures AND e2eRetryAttempts < maxE2ERetries:
+  LOG "E2E failures found, attempting auto-fix (attempt {e2eRetryAttempts + 1}/{maxE2ERetries})"
+
+  // Analyze failures and determine fix strategy
+  FOR each failure in e2eResult.failures:
+    IF failure.type IN ["UI", "Styling", "Component", "Responsive", "Accessibility"]:
+      skill = "frontend"
+    ELSE IF failure.type IN ["API", "Navigation", "Auth", "Data"]:
+      skill = "backend"
+    ELSE:
+      skill = "frontend"
+
+  // Run appropriate fix skill
+  IF skill == "frontend":
+    Skill tool: skill="frontend",
+    args="--fix-bugs features/PROJ-X-feature-name.md --bugs='{e2eResult.failures}'"
+  ELSE:
+    Skill tool: skill="backend",
+    args="--fix-bugs features/PROJ-X-feature-name.md --bugs='{e2eResult.failures}'"
+
+  // Commit the fixes
+  git add -A
+  git commit -m "fix(PROJ-X): Auto-fix E2E failures attempt {e2eRetryAttempts + 1}"
+
+  // Re-run E2E
+  e2eResult = RUN_E2E_PHASE()
+  e2eRetryAttempts++
+
+// After loop
+IF e2eResult.hasFailures:
+  LOG "E2E failures persist after {maxE2ERetries} fix attempts"
+  IF continueOnFailure AND skipAfterRetries:
+    SET feature.status = "skipped"
+    ADD to errors: "E2E failed after {maxE2ERetries} fix attempts"
+    CONTINUE with next feature
+  ELSE:
+    PAUSE for user intervention
+ELSE:
+  LOG "All E2E tests passed, proceeding to deploy"
+```
+
+**E2E Result Schema:**
+```json
+{
+  "e2eResults": {
+    "journeyId": "all",
+    "totalSteps": 30,
+    "passed": 28,
+    "failed": 2,
+    "duration": "2m 45s",
+    "screenshots": ["test-results/uj-1-step-1.png", ...],
+    "consoleErrors": [],
+    "failures": [
+      {
+        "journey": "UJ-1",
+        "step": "UJ-1.3",
+        "type": "UI",
+        "message": "Button not visible on mobile",
+        "screenshot": "test-results/uj-1-step-3-error.png"
+      }
+    ]
+  }
+}
+```
+
 ### Deploy Phase
 ```
 Use Skill tool: skill="deploy", args="features/PROJ-X-feature-name.md"
@@ -271,6 +389,7 @@ const minTimeForPhase = {
   frontend: 30min,
   backend: 30min,
   qa: 20min,
+  e2e: 15min,
   deploy: 10min
 }
 ```
@@ -316,6 +435,7 @@ ON phase error:
 - `skipAfterRetries: true` - Mark feature as "skipped" and move on after max retries
 - `phaseTimeoutMinutes: 60` - Timeout per phase in minutes (0 = disabled)
 - `maxBugFixLoops: 3` - Maximum QA → Fix → QA cycles before giving up
+- `maxE2ERetries: 2` - Maximum E2E → Fix → E2E cycles before giving up
 - `pauseOnErrors: false` - Changed default: don't pause on errors
 
 ### Error Categories
@@ -431,14 +551,15 @@ At session end (completion, time limit, or error pause), generate `features/orch
 
 ### PROJ-1: Feature Name
 - **Status:** Deployed ✓
-- **Phases:** requirements ✓ → architecture ✓ → frontend ✓ → backend ✓ → qa ✓ → deploy ✓
-- **Duration:** 2h 15m
+- **Phases:** requirements ✓ → architecture ✓ → frontend ✓ → backend ✓ → qa ✓ → e2e ✓ → deploy ✓
+- **Duration:** 2h 30m
+- **E2E:** 6 journeys passed, 30 steps total
 
 ### PROJ-2: Feature Name
 - **Status:** In Progress
-- **Current Phase:** qa
+- **Current Phase:** e2e
 - **Started:** 2026-02-24 11:15:00
-- **Phases:** requirements ✓ → architecture ✓ → frontend ✓ → backend ✓ → qa (in progress)
+- **Phases:** requirements ✓ → architecture ✓ → frontend ✓ → backend ✓ → qa ✓ → e2e (in progress)
 - **Notes:** Resumed from checkpoint
 
 ## Skipped Features
@@ -460,6 +581,28 @@ At session end (completion, time limit, or error pause), generate `features/orch
   - Round 1: 5 bugs found → 3 frontend fixes, 2 backend fixes
   - Round 2: 2 bugs found → 2 frontend fixes
   - Round 3: 0 bugs → Passed
+
+## E2E Tests
+
+### PROJ-1: Feature Name
+- **Journeys Run:** 6 (UJ-1 through UJ-6)
+- **Total Steps:** 30
+- **Passed:** 30
+- **Failed:** 0
+- **Duration:** 2m 45s
+- **Screenshots:** `test-results/`
+
+### PROJ-3: Feature Name
+- **Journeys Run:** 6
+- **Total Steps:** 30
+- **Passed:** 28
+- **Failed:** 2
+- **Retry Attempts:** 2
+- **Final Status:** Passed ✓
+- **Details:**
+  - Round 1: 2 failures (mobile responsive issues)
+  - Round 2: 0 failures → Passed
+- **Screenshots:** `test-results/`
 
 ## Errors
 
@@ -547,6 +690,7 @@ When `--dry-run` is set:
 - [ ] Execute frontend phase
 - [ ] Execute backend phase (if needed)
 - [ ] Execute QA phase
+- [ ] Execute E2E phase (if needed)
 - [ ] Execute deploy phase
 - [ ] Update feature status to deployed
 - [ ] Create git tag
