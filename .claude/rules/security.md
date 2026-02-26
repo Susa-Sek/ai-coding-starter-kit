@@ -5,6 +5,16 @@
 - Use `.env.local` for local development (already in .gitignore)
 - Use `NEXT_PUBLIC_` prefix ONLY for values safe to expose in browser
 - Document all required env vars in `.env.local.example` with dummy values
+- **Credentials Documentation:** See `docs/CREDENTIALS.md` for token locations
+
+## Token Locations (Auto-Detected)
+| Service | Location |
+|---------|----------|
+| Vercel | `~/.vercel/auth.json` |
+| Supabase | `.env.local` |
+| Database | `.env.local` or connection string |
+
+Use `./scripts/deploy.sh --prod` for automatic token detection during deployment.
 
 ## Input Validation
 - Validate ALL user input on the server side with Zod

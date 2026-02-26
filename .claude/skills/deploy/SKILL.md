@@ -38,6 +38,30 @@ If this file exists, you are running in **Programmatic Mode**:
 3. Verify no Critical/High bugs exist in QA results
 4. If QA has not been done, tell the user: "Run `/qa` first before deploying."
 
+## Automatic Token Detection
+
+The skill automatically finds credentials in these locations:
+
+| Service | Location | Variable/Path |
+|---------|----------|---------------|
+| Vercel | `~/.vercel/auth.json` | `token` field |
+| Supabase | `.env.local` | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
+| Database | `.env.local` | `DATABASE_URL` or Supabase connection string |
+
+### Vercel Token Auto-Detection
+```bash
+# Read token from Vercel auth file
+VERCEL_TOKEN=$(cat ~/.vercel/auth.json 2>/dev/null | jq -r '.token')
+
+# Deploy with token
+vercel --prod --token "$VERCEL_TOKEN"
+```
+
+If no token is found, the skill will:
+1. Check `~/.vercel/auth.json`
+2. Check `VERCEL_TOKEN` environment variable
+3. Fall back to `vercel login` for interactive auth
+
 ## Vercel Skills Reference
 
 The following Vercel skills are available and should be used:
@@ -74,8 +98,16 @@ Guide the user through:
 - [ ] Configure domain (or use default `*.vercel.app`)
 
 ### 3. Deploy
+
+**Empfohlen: Automatisches Deployment-Script**
+```bash
+./scripts/deploy.sh --prod
+```
+Dieses Script findet automatisch den Vercel-Token aus `~/.vercel/auth.json`.
+
+**Manuelle Optionen:**
 - Push to main branch → Vercel auto-deploys
-- Or manual: `npx vercel --prod`
+- `vercel --prod --token "$(cat ~/.vercel/auth.json | jq -r '.token')"`
 - Monitor build in Vercel Dashboard
 
 ### 4. Post-Deployment Verification
