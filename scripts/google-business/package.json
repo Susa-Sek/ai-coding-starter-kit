@@ -1,0 +1,16 @@
+{
+  "name": "google-business-setup",
+  "version": "1.0.0",
+  "description": "SE Handwerk Google Business Profile API Setup",
+  "type": "module",
+  "scripts": {
+    "oauth": "node google-oauth-setup.js",
+    "create": "node google-business-api.js",
+    "upload": "node upload-photos.js"
+  },
+  "dependencies": {
+    "googleapis": "^140.0.0",
+    "dotenv": "^16.4.0",
+    "open": "^10.1.0"
+  }
+}
