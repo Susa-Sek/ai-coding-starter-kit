@@ -1,0 +1,143 @@
+# Data Source Configurations
+# Each source has its own scraping parameters
+
+sources:
+  gelbe_seiten:
+    name: "Gelbe Seiten"
+    enabled: true
+    base_url: "https://www.gelbeseiten.de"
+    search_path: "/suche/{query}/{location}"
+
+    # Search parameters
+    queries:
+      - "Hausverwaltung"
+      - "Immobilienverwaltung"
+      - "Wohnungsverwaltung"
+
+    # Pagination
+    max_pages: 10
+    items_per_page: 30
+
+    # Rate limiting
+    delay_seconds: 3.0
+    max_requests_per_minute: 20
+
+    # Selectors (CSS/XPath)
+    selectors:
+      listing_container: ".listing"
+      name: ".name"
+      address: ".address"
+      phone: ".phone"
+      website: ".website"
+      email: ".email"
+
+    # Anti-detection
+    requires_cookies: true
+    requires_javascript: true
+
+  immoscout:
+    name: "ImmoScout24"
+    enabled: true
+    base_url: "https://www.immobilienscout24.de"
+    search_path: "/immobilien-dienstleister/{location}/hausverwaltung"
+
+    # Search parameters
+    queries:
+      - "Hausverwaltung"
+      - "Immobilienverwaltung"
+
+    # Rate limiting
+    delay_seconds: 4.0
+    max_requests_per_minute: 15
+
+    # Selectors
+    selectors:
+      listing_container: "[data-testid='listing']"
+      name: "[data-testid='company-name']"
+      address: "[data-testid='address']"
+      phone: "[data-testid='phone']"
+      rating: "[data-testid='rating']"
+
+    # Anti-detection
+    requires_cookies: true
+    requires_javascript: true
+    anti_bot_level: "high"
+
+  hausverwaltung:
+    name: "Hausverwaltung.de"
+    enabled: true
+    base_url: "https://www.hausverwaltung.de"
+    search_path: "/suche?ort={location}&radius={radius}"
+
+    # Rate limiting
+    delay_seconds: 2.5
+    max_requests_per_minute: 25
+
+    # Selectors
+    selectors:
+      listing_container: ".verwaltung-item"
+      name: ".company-name"
+      address: ".address"
+      phone: ".contact-phone"
+      email: ".contact-email"
+      units: ".units-count"
+
+    # Anti-detection
+    requires_cookies: false
+    requires_javascript: false
+    anti_bot_level: "low"
+
+  google_maps:
+    name: "Google Maps"
+    enabled: true
+    base_url: "https://www.google.com/maps"
+
+    # Search parameters
+    queries:
+      - "Hausverwaltung Heilbronn"
+      - "Immobilienverwaltung Heilbronn"
+      - "Wohnungsverwaltung Heilbronn"
+
+    # Location filtering
+    location: "Heilbronn"
+    radius_km: 50
+
+    # Rate limiting
+    delay_seconds: 5.0  # Higher delay for Google
+    max_requests_per_minute: 10
+
+    # Selectors
+    selectors:
+      listing_container: "[data-result-index]"
+      name: "[data-item-id] h3"
+      address: "[data-item-id] .fontBodyMedium"
+      rating: "[role='img'][aria-label*='Stern']"
+      reviews: "[role='img'][aria-label*='Bewertung']"
+
+    # Anti-detection
+    requires_cookies: true
+    requires_javascript: true
+    anti_bot_level: "very_high"
+
+# Global settings
+global:
+  # Maximum results per source per run
+  max_results_per_source: 100
+
+  # Minimum data quality score (0-100)
+  min_quality_score: 50
+
+  # Deduplication
+  dedup_enabled: true
+  dedup_fields:
+    - name
+    - address
+    - phone
+
+  # Validation
+  validate_emails: true
+  validate_phones: true
+
+  # Output
+  save_html_on_error: true
+  screenshot_on_error: true

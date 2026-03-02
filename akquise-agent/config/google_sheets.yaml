@@ -1,0 +1,28 @@
+# Google Sheets Configuration
+# Copy this to config/google_sheets.yaml and fill in your values
+
+# Google Sheets ID (from the URL)
+# https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID/edit
+spreadsheet_id: "YOUR_SPREADSHEET_ID"
+
+# Path to Google Service Account credentials JSON file
+# Get from: https://console.cloud.google.com/iam-admin/serviceaccounts
+credentials_file: "config/credentials.json"
+
+# Sheet names (tabs)
+contacts_sheet: "Kontakte"
+followups_sheet: "Follow-Ups"
+
+# Rate limiting
+batch_size: 100
+requests_per_minute: 60
+
+# Telegram Configuration (for notifications)
+telegram:
+  bot_token: "YOUR_BOT_TOKEN"
+  user_id: "YOUR_USER_ID"
+
+# Follow-up intervals (days)
+followup_1_days: 7
+followup_2_days: 14
+no_response_days: 21

@@ -1,0 +1,7 @@
+# Proxy List Configuration
+# One proxy per line in format: protocol://host:port
+# Example:
+# http://proxy1.example.com:8080
+# socks5://proxy2.example.com:1080
+
+# Add your proxies below:
