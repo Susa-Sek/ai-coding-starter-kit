@@ -14,7 +14,7 @@ from enum import Enum
 # Importiere Core-Module
 from core.config import Config
 from core.logger import setup_logger
-from core.errors import AgentError
+from core.errors import GoogleBusinessAgentError
 
 # Importiere neue Komponenten
 from core.state_analyzer import StateAnalyzer, PageState, create_hybrid_analyzer
@@ -144,8 +144,15 @@ class NewAIAgent:
         self.action_executor = None
         self.memory_manager = None
 
-        # Plugin System
-        self.plugin_manager: Optional[PluginManager] = None
+        # Plugin System - initialize early for strategy access
+        self.plugin_manager = PluginManager()
+        try:
+            self.plugin_manager.load_plugins()
+            strategy_count = len(self.plugin_manager.get_plugins(PluginType.STRATEGY))
+            self.logger.info(f"📦 {strategy_count} Strategie-Plugins geladen")
+        except Exception as e:
+            self.logger.warning(f"⚠️ Plugin-System Initialisierung fehlgeschlagen: {e}")
+
         self.current_strategy: Optional[BaseStrategyPlugin] = None
 
         self.logger.info("✅ Agent initialisiert")
@@ -308,6 +315,137 @@ class NewAIAgent:
             max_iterations=self.max_iterations,
             strategy=DecisionStrategy.HYBRID
         )
+
+    def _select_strategy(self, browser_state: Dict[str, Any]) -> Optional[BaseStrategyPlugin]:
+        """
+        Select the best strategy for current browser state.
+
+        Args:
+            browser_state: Current browser state dictionary
+
+        Returns:
+            Best matching strategy or None if no suitable strategy found
+        """
+        if not self.plugin_manager:
+            self.logger.warning("⚠️ Plugin manager not initialized")
+            return None
+
+        try:
+            strategy = self.plugin_manager.get_best_plugin(browser_state, PluginType.STRATEGY)
+            if strategy:
+                self.logger.info(f"🎯 Selected strategy: {strategy.metadata.name} "
+                               f"(confidence: {strategy.confidence_score:.2f})")
+                self.current_strategy = strategy
+            else:
+                self.logger.warning("⚠️ No suitable strategy found")
+                self.current_strategy = None
+
+            return strategy
+        except Exception as e:
+            self.logger.error(f"❌ Strategy selection failed: {e}")
+            return None
+
+    def _execute_with_strategy(self, strategy: BaseStrategyPlugin,
+                               task: Dict[str, Any],
+                               browser_state: Dict[str, Any],
+                               history: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Execute decision cycle with selected strategy.
+
+        Args:
+            strategy: Strategy plugin to use
+            task: Task dictionary
+            browser_state: Current browser state
+            history: Action history
+
+        Returns:
+            Dictionary with action, result, strategy name, and confidence
+        """
+        try:
+            # 1. Analyze state with strategy
+            analyzed_state = strategy.analyze_state(browser_state)
+
+            # 2. Decide action with strategy
+            action = strategy.decide_action(task, analyzed_state, history)
+
+            # 3. Execute action with strategy
+            result = strategy.execute_action(action, self.browser.page if self.browser else None)
+
+            return {
+                'action': action,
+                'result': result,
+                'strategy': strategy.metadata.name,
+                'confidence': action.get('confidence', 0.5)
+            }
+        except Exception as e:
+            self.logger.error(f"❌ Strategy execution failed: {e}")
+            return {
+                'action': {'type': 'error', 'details': {'error': str(e)}},
+                'result': {'success': False, 'error': str(e)},
+                'strategy': strategy.metadata.name if strategy else 'unknown',
+                'confidence': 0.0
+            }
+
+    def _get_browser_state(self) -> Dict[str, Any]:
+        """
+        Get current browser state for strategy analysis.
+
+        Returns:
+            Dictionary with url, title, text, inputs, buttons
+        """
+        if not self.browser or not self.browser.page:
+            return {'url': '', 'text': '', 'title': '', 'inputs': [], 'buttons': []}
+
+        try:
+            page = self.browser.page
+
+            # Basic state information
+            state = {
+                'url': page.url,
+                'title': page.title(),
+                'text': page.locator('body').inner_text()[:3000] if page.locator('body').count() > 0 else '',
+                'page': page,  # Pass page for screenshot capture
+            }
+
+            # Try to get inputs and buttons
+            try:
+                inputs = page.locator('input:visible, textarea:visible').all()
+                state['inputs'] = []
+                for i, inp in enumerate(inputs[:10]):
+                    try:
+                        state['inputs'].append({
+                            'index': i,
+                            'type': inp.get_attribute('type') or 'text',
+                            'placeholder': inp.get_attribute('placeholder') or '',
+                            'aria_label': inp.get_attribute('aria-label') or '',
+                            'name': inp.get_attribute('name') or '',
+                            'disabled': inp.is_disabled(),
+                            'readonly': inp.get_attribute('readonly') is not None,
+                            'value': inp.input_value() if inp.get_attribute('type') != 'password' else '',
+                        })
+                    except Exception:
+                        pass
+            except Exception:
+                state['inputs'] = []
+
+            try:
+                buttons = page.locator('button:visible, [role="button"]:visible').all()
+                state['buttons'] = []
+                for btn in buttons[:15]:
+                    try:
+                        text = btn.inner_text()[:50].strip()
+                        if text:
+                            state['buttons'].append(text)
+                    except Exception:
+                        pass
+            except Exception:
+                state['buttons'] = []
+
+            return state
+
+        except Exception as e:
+            self.logger.error(f"❌ Browser state collection failed: {e}")
+            return {'url': '', 'text': '', 'title': '', 'inputs': [], 'buttons': [], 'error': str(e)}
 
     def _update_memory(self, state_before: Dict[str, Any], action: Dict[str, Any],
                       result: Dict[str, Any], state_after: Dict[str, Any]):

@@ -35,11 +35,15 @@ class PluginManager:
         """
         self.logger = logging.getLogger(__name__)
         self.registry = PluginRegistry()
+
+        # Determine base directory (scripts folder)
+        self.base_dir = Path(__file__).parent.parent  # Go up from agents/ to scripts/
+
         self.plugin_dirs = plugin_dirs or [
-            "agents/strategies",
-            "agents/analyzers",
-            "agents/executors",
-            "agents/handlers"
+            str(self.base_dir / "agents" / "strategies"),
+            str(self.base_dir / "agents" / "analyzers"),
+            str(self.base_dir / "agents" / "executors"),
+            str(self.base_dir / "agents" / "handlers")
         ]
         self.logger.info(f"PluginManager initialized with directories: {self.plugin_dirs}")
 
