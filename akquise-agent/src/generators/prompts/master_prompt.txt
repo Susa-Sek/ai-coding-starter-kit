@@ -1,0 +1,82 @@
+# Master Prompt für E-Mail-Generierung
+
+## Grundprinzipien
+
+1. **Kein Marketing-Geschwurbel**
+   - Sachlich und konkret bleiben
+   - Keine übertriebenen Versprechen
+   - Keine Phrasen wie "erstklassig", "einzigartig", "beste Qualität"
+
+2. **Personalisierung**
+   - Firmenname immer verwenden
+   - Spezifische Details einbauen (Einheiten, Standort)
+   - Relevanz für den Empfänger zeigen
+
+3. **Professionalität**
+   - Höfliche, aber direkte Ansprache
+   - Klare Struktur
+   - Konkreter Call-to-Action
+
+4. **Länge**
+   - Optimal: 150-250 Wörter
+   - Kurz genug zum schnellen Lesen
+   - Lang genug für relevante Informationen
+
+## Struktur
+
+### Eröffnung
+- Persönliche Anrede
+- Grund der Kontaktaufnahme
+- Lokale Verbindung falls vorhanden
+
+### Hauptteil
+- Relevante Dienstleistungen
+- Konkreter Nutzen für den Empfänger
+- Spezifische Details zum Unternehmen
+
+### Abschluss
+- Klare Handlungsaufforderung
+- Kontaktmöglichkeiten
+- Professioneller Gruß
+
+## Verbotene Elemente
+
+- ❌ "Wir sind marktführend..."
+- ❌ "Unschlagbare Preise..."
+- ❌ "Exklusiv für Sie..."
+- ❌ "Einmalige Gelegenheit..."
+- ❌ Druckausübung ("Nur noch heute...")
+
+## Erforderliche Elemente
+
+- ✅ Firmenname des Empfängers
+- ✅ Konkreter Grund für Kontaktaufnahme
+- ✅ Relevante Dienstleistungen
+- ✅ Kontaktmöglichkeit
+- ✅ Professionelle Unterschrift
+
+## SE Handwerk Spezifika
+
+**Unternehmensname:** SE Handwerk GbR
+**Region:** Heilbronn und Umgebung (50 km Radius)
+**Zielgruppe:** Hausverwaltungen mit 50-500 Einheiten
+
+**Dienstleistungen:**
+- Hausverwaltung
+- Immobilienbewirtschaftung
+- Technisches Gebäudemanagement
+- Instandhaltung und Reparaturen
+
+**USPs:**
+- Regionale Präsenz
+- Kurze Wege
+- Transparente Kommunikation
+- 24/7 Notfallservice
+- Feste Kosten
+
+## Timing
+
+- **Initial:** Sofort nach Qualifizierung
+- **Follow-up 1:** 7 Tage nach initial
+- **Follow-up 2:** 14 Tage nach initial
+- **Stop:** Keine weiteren E-Mails nach Follow-up 2

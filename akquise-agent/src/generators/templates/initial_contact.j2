@@ -1,0 +1,59 @@
+Hausverwaltung für Ihre Immobilien{% if location %} in {{ location }}{% endif %}
+---
+{{ greeting }}
+
+{% if is_target_location and location %}
+als erfahrener Partner für Immobilienbewirtschaftung in {{ location_text }} sind wir auf Ihr Unternehmen
+{{ company_name }} aufmerksam geworden.
+{% else %}
+wir sind auf Ihr Unternehmen {{ company_name }} aufmerksam geworden.
+{% endif %}
+
+{% if units %}
+Mit {{ units_text }} haben Sie einen beeindruckenden Immobilienbestand, dessen professionelle
+Verwaltung sorgfältige Planung und zuverlässige Umsetzung erfordert.
+{% elif employees %}
+Mit {{ employees_text }} bewältigen Sie täglich vielfältige Aufgaben in der Immobilienbewirtschaftung.
+{% else %}
+Die professionelle Verwaltung von Immobilien erfordert Expertise und zuverlässige Partner.
+{% endif %}
+
+**Unser Angebot für Sie:**
+
+Die SE Handwerk GbR bietet umfassende Dienstleistungen in der Hausverwaltung:
+
+{% for service in services[:3] %}
+• {{ service }}
+{% endfor %}
+
+{% if is_target_location %}
+Als regionales Unternehmen aus {{ region }} kennen wir die lokalen Gegebenheiten und
+verfügen über ein breites Netzwerk an zuverlässigen Handwerkern und Dienstleistern.
+{% endif %}
+
+**Warum SE Handwerk?**
+
+✓ Regionale Präsenz mit kurzen Wegen
+✓ Transparente Kommunikation und regelmäßige Berichterstattung
+✓ 24/7 Notfallservice für dringende Instandhaltungen
+✓ Fest kalkulierbare Kosten ohne Überraschungen
+
+{% if units and units >= 50 %}
+Bei {{ units_text }} sehen wir großes Potenzial für eine gewinnbringende Zusammenarbeit.
+Gerne würden wir Ihnen in einem persönlichen Gespräch unsere Arbeitsweise vorstellen.
+{% else %}
+Gerne würden wir Ihnen in einem persönlichen Gespräch unsere Arbeitsweise vorstellen.
+{% endif %}
+
+Haben Sie in den nächsten Wochen Zeit für ein kurzes Telefonat? Ich rufe Sie gerne an,
+um einen passenden Termin zu vereinbaren.
+
+Mit freundlichen Grüßen
+
+Ihr Team von SE Handwerk GbR
+
+--
+SE Handwerk GbR
+{{ sender.contact.email }}
+{{ sender.contact.phone }}
+{{ sender.region }}

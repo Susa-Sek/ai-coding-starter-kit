@@ -1,0 +1,32 @@
+Erinnerung: Hausverwaltung für Ihre Immobilien{% if location %} in {{ location }}{% endif %}
+---
+{{ greeting }}
+
+vor einer Woche haben wir Ihnen unser Angebot zur Hausverwaltung gesendet.
+Ich möchte mich kurz bei Ihnen melden und sehen, ob Sie Interesse haben.
+
+{% if units %}
+Bei {{ units_text }} verstehen wir, dass die Auswahl des richtigen Verwaltungspartners
+eine wichtige Entscheidung ist. Gerne erläutere ich Ihnen, wie SE Handwerk Ihre
+konkreten Anforderungen erfüllen kann.
+{% else %}
+Gerne erläutere ich Ihnen, wie SE Handwerk Ihre konkreten Anforderungen erfüllen kann.
+{% endif %}
+
+**Haben Sie Fragen?**
+
+Rufen Sie mich einfach unter {{ sender.contact.phone }} an, oder antworten Sie
+auf diese E-Mail. Ein kurzes Telefonat reicht oft aus, um zu sehen, ob wir
+zusammenpassen.
+
+Ich freue mich auf Ihre Rückmeldung.
+
+Mit freundlichen Grüßen
+
+Ihr Team von SE Handwerk GbR
+
+--
+SE Handwerk GbR
+{{ sender.contact.email }}
+{{ sender.contact.phone }}
+{{ sender.region }}

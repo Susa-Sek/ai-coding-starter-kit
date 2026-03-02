@@ -1,0 +1,30 @@
+Letzter Kontaktversuch: Hausverwaltung für Ihre Immobilien
+---
+{{ greeting }}
+
+ich habe Ihnen in den letzten zwei Wochen zwei E-Mails geschickt und möchte
+Sie nicht weiter belästigen. Dies ist mein letzter Kontaktversuch.
+
+Falls Sie aktuell keinen Bedarf an unseren Dienstleistungen haben, verstehe ich
+das natürlich. Sollte sich Ihre Situation in Zukunft ändern, stehe ich gerne
+zur Verfügung.
+
+{% if is_target_location %}
+Als Partner in {{ region }} kennen wir die lokalen Anforderungen und können
+schnell und flexibel agieren.
+{% endif %}
+
+Vielen Dank für Ihre Aufmerksamkeit.
+
+Mit freundlichen Grüßen
+
+Ihr Team von SE Handwerk GbR
+
+--
+SE Handwerk GbR
+{{ sender.contact.email }}
+{{ sender.contact.phone }}
+{{ sender.region }}
+
+P.S.: Falls Sie diese E-Mails nicht mehr erhalten möchten, antworten Sie bitte
+kurz mit "Abmeldung" - ich entferne Sie dann sofort von meiner Liste.
