@@ -12,8 +12,9 @@
 
 | ID | Feature | Status | Spec | Created |
 |----|---------|--------|------|---------|
+| PROJ-1 | Google Business Agent Optimization | Deployed | google-business-project/features/PROJ-1-google-business-agent.md | 2026-02-27 |
 | PROJ-9 | E2E User Journey Tests | Deployed | PROJ-9-e2e-user-journey-tests.md | 2026-02-26 |
 
 <!-- Add features above this line -->
 
-## Next Available ID: PROJ-1
+## Next Available ID: PROJ-2
