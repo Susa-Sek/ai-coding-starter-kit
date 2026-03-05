@@ -1,0 +1,45 @@
+# Akquise Agent - B2B Acquisition Tool
+# Core Dependencies
+playwright>=1.40.0
+camoufox>=0.1.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+requests>=2.31.0
+
+# Data Processing
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# Email Templates
+jinja2>=3.1.0
+
+# Scheduling
+apscheduler>=3.10.0
+
+# Validation
+pydantic>=2.0.0
+email-validator>=2.1.0
+
+# Google Sheets Integration (replaces database)
+google-api-python-client>=2.100.0
+google-auth-oauthlib>=1.0.0
+gspread>=5.0.0
+
+# Telegram Bot
+python-telegram-bot>=20.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0
+rich>=13.0.0  # Pretty console output
+loguru>=0.7.0  # Logging
+aiohttp>=3.9.0  # Async HTTP
+aiosmtplib>=3.0.0  # Async SMTP for email sending
+aioimaplib>=2.0.0  # Async IMAP for saving drafts to email account
+
+# Development
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.0.0
+mypy>=1.5.0
