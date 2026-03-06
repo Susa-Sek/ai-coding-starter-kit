@@ -27,6 +27,7 @@ class EmailDraft:
     personalization_score: float = 0.0
     generated_at: datetime = None
     metadata: Dict[str, Any] = None
+    html_body: Optional[str] = None  # HTML version of body
 
     def __post_init__(self):
         if self.generated_at is None:
@@ -46,7 +47,8 @@ class EmailDraft:
             'template_used': self.template_used,
             'personalization_score': self.personalization_score,
             'generated_at': self.generated_at.isoformat() if self.generated_at else None,
-            'metadata': self.metadata
+            'metadata': self.metadata,
+            'html_body': self.html_body
         }
 
 
@@ -142,7 +144,7 @@ class EmailGenerator:
 
     def generate(
         self,
-        contact: ScraperResult,
+        contact,
         template_name: str = 'initial_contact',
         custom_context: Optional[Dict[str, Any]] = None
     ) -> Optional[EmailDraft]:
@@ -150,7 +152,7 @@ class EmailGenerator:
         Generate personalized email draft for a contact.
 
         Args:
-            contact: Contact data to generate email for
+            contact: Contact data (ScraperResult or Contact object)
             template_name: Name of template to use
             custom_context: Additional context for template
 
@@ -161,8 +163,10 @@ class EmailGenerator:
             logger.error(f"Template not found: {template_name}")
             return None
 
-        if not contact.email:
-            logger.warning(f"Contact has no email: {contact.company_name}")
+        # Get email from either ScraperResult or Contact object
+        email = getattr(contact, 'email', None)
+        if not email:
+            logger.warning(f"Contact has no email: {getattr(contact, 'company_name', 'Unknown')}")
             return None
 
         # Build template context
@@ -194,15 +198,15 @@ class EmailGenerator:
                 company_name=contact.company_name,
                 subject=subject.strip(),
                 body=body.strip(),
-                recipient_email=contact.email,
+                recipient_email=email,
                 recipient_name=None,  # Could be extracted from contact
                 template_used=template_name,
                 personalization_score=personalization_score,
                 metadata={
-                    'units': contact.units,
-                    'employees': contact.employees,
-                    'address': contact.address,
-                    'source': contact.source
+                    'units': getattr(contact, 'units', None),
+                    'employees': getattr(contact, 'employees', None),
+                    'address': getattr(contact, 'address', None),
+                    'source': getattr(contact, 'source', None)
                 }
             )
 
@@ -232,19 +236,56 @@ class EmailGenerator:
         Returns:
             Dictionary with template variables
         """
+        # Calculate years in business if founding year is available
+        years_in_business = None
+        founding_year = getattr(contact, 'founding_year', None)
+        if founding_year:
+            years_in_business = datetime.now().year - founding_year
+
+        # Check if email is a business email
+        is_business_email = False
+        if contact.email:
+            is_business_email = self._is_business_email(contact.email)
+
+        # Get completeness score
+        completeness_score = getattr(contact, 'completeness_score', 0)
+        if hasattr(contact, 'calculate_completeness_score'):
+            completeness_score = contact.calculate_completeness_score()
+
+        # Get website description
+        website_description = getattr(contact, 'website_description', None)
+
+        # Get decision maker info (NEW)
+        decision_maker_name = getattr(contact, 'decision_maker_name', None)
+        decision_maker_title = getattr(contact, 'decision_maker_title', None)
+        decision_maker_email = getattr(contact, 'decision_maker_email', None)
+        decision_maker_phone = getattr(contact, 'decision_maker_phone', None)
+        has_decision_maker = bool(decision_maker_name)
+
+        # Determine company size category
+        units = getattr(contact, 'units', None)
+        company_size_category = 'klein'  # small
+        if units:
+            if units > 100:
+                company_size_category = 'groß'  # large
+            elif units > 50:
+                company_size_category = 'mittel'  # medium
+
         context = {
             # Company info
             'company_name': contact.company_name,
             'company': {
                 'name': contact.company_name,
-                'address': contact.address,
-                'phone': contact.phone,
-                'email': contact.email,
-                'website': contact.website,
-                'units': contact.units,
-                'employees': contact.employees,
-                'rating': contact.rating,
-                'reviews': contact.reviews
+                'address': getattr(contact, 'address', None),
+                'phone': getattr(contact, 'phone', None),
+                'email': getattr(contact, 'email', None),
+                'website': getattr(contact, 'website', None),
+                'units': units,
+                'employees': getattr(contact, 'employees', None),
+                'rating': getattr(contact, 'rating', None),
+                'reviews': getattr(contact, 'reviews', None),
+                'description': website_description,
+                'founding_year': founding_year,
             },
 
             # SE Handwerk info
@@ -253,17 +294,32 @@ class EmailGenerator:
             'region': self.company_info['region'],
 
             # Location and targeting
-            'location': self._extract_location(contact.address),
-            'is_target_location': self._is_target_location(contact.address),
+            'location': self._extract_location(getattr(contact, 'address', None)),
+            'is_target_location': self._is_target_location(getattr(contact, 'address', None)),
             'is_target_size': self._is_target_size(contact),
 
             # Formatting helpers
-            'units': contact.units,
-            'employees': contact.employees,
-            'units_text': self._format_units(contact.units),
-            'employees_text': self._format_employees(contact.employees),
-            'location_text': self._format_location(contact.address),
+            'units': units,
+            'employees': getattr(contact, 'employees', None),
+            'units_text': self._format_units(units),
+            'employees_text': self._format_employees(getattr(contact, 'employees', None)),
+            'location_text': self._format_location(getattr(contact, 'address', None)),
             'greeting': self._get_greeting(contact),
+
+            # Personalization variables
+            'company_description': website_description,
+            'founding_year': founding_year,
+            'years_in_business': years_in_business,
+            'is_business_email': is_business_email,
+            'completeness_score': completeness_score,
+
+            # Decision maker context (NEW)
+            'decision_maker_name': decision_maker_name,
+            'decision_maker_title': decision_maker_title,
+            'decision_maker_email': decision_maker_email,
+            'decision_maker_phone': decision_maker_phone,
+            'has_decision_maker': has_decision_maker,
+            'company_size_category': company_size_category,
 
             # Metadata
             'generated_date': datetime.now().strftime('%d.%m.%Y'),
@@ -275,6 +331,21 @@ class EmailGenerator:
             context.update(custom_context)
 
         return context
+
+    def _is_business_email(self, email: str) -> bool:
+        """Check if email is a business email (not free provider)."""
+        if not email or '@' not in email:
+            return False
+
+        free_providers = {
+            'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com',
+            'live.com', 'aol.com', 'icloud.com', 'mail.com',
+            'gmx.de', 'gmx.net', 'web.de', 't-online.de',
+            'freenet.de', 'yahoo.de', 'googlemail.com'
+        }
+
+        domain = email.split('@')[-1].lower()
+        return domain not in free_providers
 
     def _extract_location(self, address: Optional[str]) -> Optional[str]:
         """Extract city from address."""
@@ -309,16 +380,19 @@ class EmailGenerator:
         address_lower = address.lower()
         return any(city in address_lower for city in target_cities)
 
-    def _is_target_size(self, contact: ScraperResult) -> bool:
+    def _is_target_size(self, contact) -> bool:
         """Check if contact matches target size criteria."""
         params = self.TARGET_PARAMS
 
-        if contact.units:
-            if params['min_units'] <= contact.units <= params['max_units']:
+        units = getattr(contact, 'units', None)
+        employees = getattr(contact, 'employees', None)
+
+        if units:
+            if params['min_units'] <= units <= params['max_units']:
                 return True
 
-        if contact.employees:
-            if contact.employees <= params['max_employees']:
+        if employees:
+            if employees <= params['max_employees']:
                 return True
 
         return False
@@ -360,12 +434,51 @@ class EmailGenerator:
             return location
 
     def _get_greeting(self, contact: ScraperResult) -> str:
-        """Get appropriate German greeting."""
-        # For companies, use formal greeting
-        if contact.company_name:
-            # Check if we can infer a person name
-            return "Sehr geehrte Damen und Herren,"
+        """
+        Get personalized German greeting using decision maker if available.
 
+        Prioritizes personal greeting when decision maker name is known.
+        Falls back to formal company greeting.
+        """
+        decision_maker_name = getattr(contact, 'decision_maker_name', None)
+        decision_maker_title = getattr(contact, 'decision_maker_title', None)
+
+        if decision_maker_name:
+            # Clean the name (remove any remaining artifacts)
+            name = decision_maker_name.strip()
+
+            # Determine title and salutation
+            if decision_maker_title:
+                title = decision_maker_title.strip()
+                # Map common German titles to appropriate salutations
+                if any(t in title.lower() for t in ['geschäftsführer', 'inhaber', 'direktor', 'ceo']):
+                    if 'frau' in name.lower() or name.endswith('a') or name.endswith('e'):
+                        # Female
+                        return f"Sehr geehrte Frau {name},"
+                    else:
+                        # Male
+                        return f"Sehr geehrter Herr {name},"
+                elif 'prokurist' in title.lower() or 'leiter' in title.lower():
+                    if 'frau' in name.lower() or name.endswith('a') or name.endswith('e'):
+                        return f"Sehr geehrte Frau {name},"
+                    else:
+                        return f"Sehr geehrter Herr {name},"
+
+            # No title or unknown title - try to determine gender from name
+            # German naming patterns for gender inference
+            female_endings = ('a', 'e', 'i', 'y')
+            female_patterns = ('maria', 'anna', 'sabine', 'monika', 'barbara', 'christine',
+                              'ulrike', 'stephanie', 'nadia', 'julia', 'sandra')
+
+            name_lower = name.lower()
+
+            if name_lower in female_patterns or name.endswith(female_endings):
+                return f"Sehr geehrte Frau {name},"
+            else:
+                # Default to male salutation (more common in German business)
+                return f"Sehr geehrter Herr {name},"
+
+        # Fallback to generic greeting
         return "Sehr geehrte Damen und Herren,"
 
     def _calculate_personalization(self, context: Dict[str, Any]) -> float:
@@ -373,41 +486,71 @@ class EmailGenerator:
         Calculate personalization score (0-1).
 
         Higher score = more personalized email.
+        Based on data quality and decision maker availability.
         """
         score = 0.0
-        max_score = 0.0
+        max_score = 1.0  # Total 100%
 
-        # Company name: always included (+0.2)
-        max_score += 0.2
+        # === DECISION MAKER (40%) - Most valuable for personalization ===
+        # Decision maker name: 20%
+        if context.get('decision_maker_name'):
+            score += 0.20
+
+        # Decision maker email (direct contact): 10%
+        if context.get('decision_maker_email'):
+            score += 0.10
+
+        # Decision maker title: 5%
+        if context.get('decision_maker_title'):
+            score += 0.05
+
+        # Has any decision maker info: 5%
+        if context.get('has_decision_maker'):
+            score += 0.05
+
+        # === DATA QUALITY (40%) ===
+        # Company name: always included, 5%
         if context.get('company_name'):
-            score += 0.2
+            score += 0.05
 
-        # Location: +0.2
-        max_score += 0.2
-        if context.get('location'):
-            score += 0.2
-
-        # Units info: +0.2
-        max_score += 0.2
-        if context.get('company', {}).get('units'):
-            score += 0.2
-
-        # Employees info: +0.2
-        max_score += 0.2
-        if context.get('company', {}).get('employees'):
-            score += 0.2
-
-        # Target location match: +0.1
-        max_score += 0.1
+        # Location in target region: 10%
         if context.get('is_target_location'):
-            score += 0.1
+            score += 0.10
 
-        # Target size match: +0.1
-        max_score += 0.1
+        # Target size match: 10%
         if context.get('is_target_size'):
-            score += 0.1
+            score += 0.10
 
-        return score / max_score if max_score > 0 else 0.0
+        # Units info: 5%
+        if context.get('company', {}).get('units'):
+            score += 0.05
+
+        # Employees info: 5%
+        if context.get('company', {}).get('employees'):
+            score += 0.05
+
+        # Business email (not free provider): 5%
+        if context.get('is_business_email'):
+            score += 0.05
+
+        # === RELEVANCE (20%) ===
+        # Company description from website: 10%
+        if context.get('company_description'):
+            score += 0.10
+
+        # Years in business (established company): 5%
+        if context.get('years_in_business') and context.get('years_in_business') > 0:
+            score += 0.05
+
+        # Completeness score: 5%
+        completeness = context.get('completeness_score', 0)
+        if completeness > 0.7:
+            score += 0.05
+        elif completeness > 0.5:
+            score += 0.03
+
+        # Normalize to 0-1 range
+        return min(score, 1.0)
 
     def generate_batch(
         self,
