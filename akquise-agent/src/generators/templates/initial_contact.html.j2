@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.6; color: #333333; max-width: 600px; margin: 0 auto; padding: 20px;">
+
+  <p style="margin: 0 0 16px 0;"><strong>Betreff:</strong> {{ company_name }} – Entlastung f&uuml;r Ihre Hausverwaltung aus der Region</p>
+
+  <hr style="border: none; border-top: 1px solid #cccccc; margin: 16px 0;">
+
+  <p style="margin: 0 0 16px 0;">{{ greeting }}</p>
+
+{% if company_description %}
+  <p style="margin: 0 0 16px 0;">als ich auf Ihrer Webseite die Leistungen im Bereich {{ company_description[:80] }}{% if company_description|length > 80 %}...{% endif %} gelesen habe, war ich beeindruckt von Ihrem Angebot.</p>
+{% elif units %}
+  <p style="margin: 0 0 16px 0;">mit der Verwaltung von {{ units_text }} bewirtschaften Sie ein beachtliches Portfolio – das erfordert viel Organisation und Fachwissen.</p>
+{% elif employees %}
+  <p style="margin: 0 0 16px 0;">Ihr Team mit {{ employees_text }} zeigt, dass Sie ein etablierter Anbieter in der Immobilienbranche sind.</p>
+{% else %}
+  <p style="margin: 0 0 16px 0;">als regionaler Partner aus {{ region }} habe ich Ihr Unternehmen mit Interesse zur Kenntnis genommen.</p>
+{% endif %}
+
+  <hr style="border: none; border-top: 1px solid #cccccc; margin: 16px 0;">
+
+  <p style="margin: 0 0 8px 0;"><strong>Warum ich Sie anschreibe:</strong></p>
+
+  <p style="margin: 0 0 16px 0;">Die Hausverwaltung wird immer anspruchsvoller. Steigende Energiekosten, neue gesetzliche Vorgaben und h&ouml;here Erwartungen der Eigent&uuml;mer – das kennen Sie aus dem Alltag.</p>
+
+{% if decision_maker_name %}
+  <p style="margin: 0 0 16px 0;">{% if decision_maker_title %}{{ decision_maker_title }} {{ decision_maker_name }}{% else %}Als Entscheidungstr&auml;ger{% endif %}, wissen Sie: Zeit f&uuml;r strategische Aufgaben bleibt oft zu wenig.</p>
+{% else %}
+  <p style="margin: 0 0 16px 0;">Als Gesch&auml;ftsf&uuml;hrung bleibt oft zu wenig Zeit f&uuml;r strategische Aufgaben, wenn der operative Alltag fordert.</p>
+{% endif %}
+
+  <hr style="border: none; border-top: 1px solid #cccccc; margin: 16px 0;">
+
+  <p style="margin: 0 0 8px 0;"><strong>Was wir bieten:</strong></p>
+
+  <p style="margin: 0 0 12px 0;">Die SE Handwerk GbR aus {{ region }} unterst&uuml;tzt Hausverwaltungen bei:</p>
+
+  <ul style="margin: 0 0 16px 0; padding-left: 20px;">
+    <li style="margin-bottom: 8px;"><strong>Technisches Geb&auml;udemanagement</strong> – Instandhaltung und Reparaturen aus einer Hand</li>
+    <li style="margin-bottom: 8px;"><strong>Mietnebenkostenabrechnung</strong> – Transparent, fristgerecht und rechtssicher</li>
+    <li style="margin-bottom: 8px;"><strong>Objektbetreuung</strong> – Regelm&auml;&szlig;ige Kontrollg&auml;nge mit l&uuml;ckenloser Dokumentation</li>
+    <li style="margin-bottom: 0;"><strong>Notfallservice</strong> – 24/7 Erreichbarkeit f&uuml;r Ihre Mieter bei dringenden F&auml;llen</li>
+  </ul>
+
+{% if years_in_business and years_in_business > 5 %}
+  <p style="margin: 0 0 16px 0;">Seit <strong>{{ years_in_business }} Jahren</strong> arbeiten wir mit Immobilienverwaltern zusammen – wir kennen Ihre Anforderungen.</p>
+{% endif %}
+
+  <hr style="border: none; border-top: 1px solid #cccccc; margin: 16px 0;">
+
+  <p style="margin: 0 0 8px 0;"><strong>Das Angebot:</strong></p>
+
+  <p style="margin: 0 0 16px 0;">Ein unverbindliches, kurzes Telefonat. Mehr nicht.</p>
+
+  <p style="margin: 0 0 16px 0;">Ich zeige Ihnen konkrete Beispiele, wie wir andere Hausverwaltungen in {{ region }} entlasten. Danach entscheiden Sie, ob eine Zusammenarbeit f&uuml;r Sie interessant ist.</p>
+
+  <p style="margin: 0 0 8px 0;"><strong>Wann passt es Ihnen?</strong></p>
+
+  <ul style="margin: 0 0 16px 0; padding-left: 20px; list-style-type: none;">
+    <li style="margin-bottom: 4px;">&#9744; Vormittag (9-12 Uhr)</li>
+    <li style="margin-bottom: 4px;">&#9744; Nachmittag (14-17 Uhr)</li>
+    <li style="margin-bottom: 0;">&#9744; Nach Vereinbarung</li>
+  </ul>
+
+  <p style="margin: 0 0 16px 0;">Antworten Sie einfach auf diese E-Mail oder nennen Sie mir telefonisch Ihren Wunschtermin.</p>
+
+  <hr style="border: none; border-top: 1px solid #cccccc; margin: 16px 0;">
+
+  <p style="margin: 0 0 4px 0;">Mit freundlichen Gr&uuml;&szlig;en</p>
+
+  <p style="margin: 16px 0 4px 0;"><strong>{{ sender.name }}</strong><br>
+  SE Handwerk GbR<br>
+  {{ sender.contact.phone }}<br>
+  {{ sender.contact.email }}</p>
+
+  <p style="margin: 16px 0 0 0; font-style: italic;"><em>PS: Referenzen aus {{ region }} sende ich gerne auf Anfrage.</em></p>
+
+</body>
+</html>
