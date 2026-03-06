@@ -197,11 +197,14 @@ class EmailGenerator:
             html_template_key = f"{template_name}.html"
             has_html_template = html_template_key in self._templates
 
-            if format == 'html' and has_html_template:
-                html_template_content = self._templates[html_template_key]
-                # HTML templates are full documents, render directly
-                html_body = Template(html_template_content).render(**context)
-                logger.debug(f"Rendered HTML template for {template_name}")
+            if format == 'html':
+                if has_html_template:
+                    html_template_content = self._templates[html_template_key]
+                    # HTML templates are full documents, render directly
+                    html_body = Template(html_template_content).render(**context)
+                    logger.debug(f"Rendered HTML template for {template_name}")
+                else:
+                    logger.warning(f"HTML format requested but no HTML template found for '{template_name}'")
 
             # Calculate personalization score
             personalization_score = self._calculate_personalization(context)
