@@ -621,13 +621,14 @@ class EmailGenerator:
 
         return drafts
 
-    def preview(self, draft: EmailDraft, highlights: bool = True) -> str:
+    def preview(self, draft: EmailDraft, highlights: bool = True, show_html: bool = False) -> str:
         """
         Generate preview of email draft.
 
         Args:
             draft: Email draft to preview
             highlights: Whether to highlight personalization
+            show_html: Whether to include HTML preview
 
         Returns:
             Formatted preview string
@@ -643,17 +644,33 @@ class EmailGenerator:
             f"Betreff: {draft.subject}",
             "",
             "-" * 60,
-            draft.body,
+            "TEXT VERSION:",
             "-" * 60,
+            draft.body,
             "",
         ]
 
+        if show_html and draft.html_body:
+            lines.extend([
+                "-" * 60,
+                "HTML VERSION:",
+                "-" * 60,
+                draft.html_body[:500] + "..." if len(draft.html_body) > 500 else draft.html_body,
+                "",
+            ])
+
         if highlights:
             lines.extend([
+                "-" * 60,
                 "PERSONALISIERUNG:",
                 f"  Score: {draft.personalization_score:.2%}",
                 f"  Template: {draft.template_used}",
             ])
+
+            if draft.html_body:
+                lines.append("  HTML: Ja")
+            else:
+                lines.append("  HTML: Nein")
 
             if draft.metadata:
                 lines.append("  Metadata:")
