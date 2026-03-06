@@ -146,7 +146,8 @@ class EmailGenerator:
         self,
         contact,
         template_name: str = 'initial_contact',
-        custom_context: Optional[Dict[str, Any]] = None
+        custom_context: Optional[Dict[str, Any]] = None,
+        format: str = 'text'
     ) -> Optional[EmailDraft]:
         """
         Generate personalized email draft for a contact.
@@ -155,6 +156,7 @@ class EmailGenerator:
             contact: Contact data (ScraperResult or Contact object)
             template_name: Name of template to use
             custom_context: Additional context for template
+            format: Output format - 'text' or 'html' (default: 'text')
 
         Returns:
             EmailDraft or None if generation fails
@@ -190,6 +192,17 @@ class EmailGenerator:
             subject = Template(subject_template).render(**context)
             body = Template(body_template).render(**context)
 
+            # Render HTML version if available and requested
+            html_body = None
+            html_template_key = f"{template_name}.html"
+            has_html_template = html_template_key in self._templates
+
+            if format == 'html' and has_html_template:
+                html_template_content = self._templates[html_template_key]
+                # HTML templates are full documents, render directly
+                html_body = Template(html_template_content).render(**context)
+                logger.debug(f"Rendered HTML template for {template_name}")
+
             # Calculate personalization score
             personalization_score = self._calculate_personalization(context)
 
@@ -202,11 +215,13 @@ class EmailGenerator:
                 recipient_name=None,  # Could be extracted from contact
                 template_used=template_name,
                 personalization_score=personalization_score,
+                html_body=html_body.strip() if html_body else None,
                 metadata={
                     'units': getattr(contact, 'units', None),
                     'employees': getattr(contact, 'employees', None),
                     'address': getattr(contact, 'address', None),
-                    'source': getattr(contact, 'source', None)
+                    'source': getattr(contact, 'source', None),
+                    'format': format
                 }
             )
 
@@ -557,7 +572,8 @@ class EmailGenerator:
         contacts: List[ScraperResult],
         template_name: str = 'initial_contact',
         min_personalization: float = 0.5,
-        filter_grade: Optional[LeadQuality] = LeadQuality.A
+        filter_grade: Optional[LeadQuality] = LeadQuality.A,
+        format: str = 'text'
     ) -> List[EmailDraft]:
         """
         Generate email drafts for multiple contacts.
@@ -567,6 +583,7 @@ class EmailGenerator:
             template_name: Name of template to use
             min_personalization: Minimum personalization score required
             filter_grade: Only generate for contacts of this grade or higher
+            format: Output format - 'text' or 'html' (default: 'text')
 
         Returns:
             List of generated email drafts
@@ -580,7 +597,7 @@ class EmailGenerator:
                 continue
 
             # Generate draft
-            draft = self.generate(contact, template_name)
+            draft = self.generate(contact, template_name, format=format)
 
             if draft is None:
                 continue
